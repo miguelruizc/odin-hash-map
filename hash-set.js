@@ -1,13 +1,13 @@
-class HashMap {
+class HashSet {
 	static INITIAL_CAPACITY = 16;
 	static LOAD_FACTOR = 0.75;
 
 	constructor() {
-		this.arraySize = HashMap.INITIAL_CAPACITY;
+		this.arraySize = HashSet.INITIAL_CAPACITY;
 		this.keyCount = 0;
 
 		this.array = new Array(this.arraySize);
-		for (let i = 0; i < this.arraySize; i++) this.array[i] = {};
+		for (let i = 0; i < this.arraySize; i++) this.array[i] = new Set();
 	}
 
 	hash(key) {
@@ -21,9 +21,9 @@ class HashMap {
 		return hashCode % this.arraySize;
 	}
 
-	set(key, value) {
+	set(key) {
 		const index = this.hash(key);
-		this.array[index][key] = value;
+		this.array[index].add(key);
 
 		this.keyCount++;
 		this.checkCapacity();
@@ -31,24 +31,37 @@ class HashMap {
 
 	get(key) {
 		const index = this.hash(key);
-		if (this.array[index][key]) return this.array[index][key];
-		else return null;
+        
+        let found = null;
+
+		this.array[index].forEach((element) => {
+			if (element === key) found = element;
+		});
+
+		return found;
 	}
 
 	has(key) {
 		const index = this.hash(key);
-		if (this.array[index][key]) return true;
-		return false;
+		let has = false;
+
+		this.array[index].forEach((element) => {
+			if (element === key) has = true;
+		});
+
+		return has;
 	}
 
 	remove(key) {
 		const index = this.hash(key);
 
-		if (this.array[index][key]) {
-			delete this.array[index][key];
-			this.keyCount--;
-			return true;
-		}
+		this.array[index].forEach((element) => {
+			if (element === key) {
+				this.array[index].delete(element);
+				this.keyCount--;
+				return true;
+			}
+		});
 
 		return false;
 	}
@@ -57,60 +70,44 @@ class HashMap {
 		return this.keyCount;
 	}
 
-	reset(size = HashMap.INITIAL_CAPACITY) {
+	reset(size = HashSet.INITIAL_CAPACITY) {
 		this.arraySize = size;
 		this.keyCount = 0;
 
 		this.array = new Array(this.arraySize);
-		for (let i = 0; i < this.arraySize; i++) this.array[i] = {};
+		for (let i = 0; i < this.arraySize; i++) this.array[i] = new Set();
 	}
 
 	keys() {
 		let keys = [];
 		this.array.forEach((element) => {
-			keys.push(...Object.keys(element));
+			element.forEach(thing => {
+                keys.push(thing);
+            })
 		});
 
 		return keys;
 	}
 
-	values() {
-		let values = [];
-		this.array.forEach((element) => {
-			values.push(...Object.values(element));
-		});
-
-		return values;
-	}
-
-	entries() {
-		let entries = [];
-		this.array.forEach((element) => {
-			entries.push(...Object.entries(element));
-		});
-
-		return entries;
-	}
 
 	checkCapacity() {
 		let currentLoad = this.keyCount / this.arraySize;
 
-		if (currentLoad >= HashMap.LOAD_FACTOR) this.grow();
+		if (currentLoad >= HashSet.LOAD_FACTOR) this.grow();
 	}
 
 	grow() {
 		// Store data
 		let keys = this.keys();
-		let values = this.values();
 		let keyCount = this.keyCount;
 
 		// Expand array
 		this.arraySize += 16;
 		this.reset(this.arraySize);
-		
+
 		// Add data back
-		for(let i = 0; i < keyCount; i++){
-			this.set(keys[i], values[i]);
+		for (let i = 0; i < keyCount; i++) {
+			this.set(keys[i]);
 		}
 	}
 }
